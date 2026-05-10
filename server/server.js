@@ -1,45 +1,43 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const passport = require('passport');
-const connectDB = require('./config/db');
-const configurePassport = require('./config/passport');
-const errorHandler = require('./middleware/errorHandler');
+import dotenv from 'dotenv'
+import express from 'express'
+import cors from 'cors'
+import mongoose from 'mongoose'
+import authRoutes from './routes/authRoutes.js'
+import productRoutes from './routes/productRoutes.js'
+import orderRoutes from './routes/orderRoutes.js'
+import categoryRoutes from './routes/categoryRoutes.js'
 
-// Routes
-const authRoutes = require('./routes/authRoutes');
-const productRoutes = require('./routes/productRoutes');
-const categoryRoutes = require('./routes/categoryRoutes');
-const orderRoutes = require('./routes/orderRoutes');
+dotenv.config()
 
-const app = express();
-
-// Connect to database
-connectDB();
+const app = express()
 
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.use(cors())
+app.use(express.json())
 
-// Passport configuration
-configurePassport(passport);
-app.use(passport.initialize());
+// MongoDB Connection
+mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://user:password@cluster.mongodb.net/freshcart')
+  .then(() => console.log('✅ MongoDB connected'))
+  .catch(err => console.error('❌ MongoDB connection failed:', err))
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/orders', orderRoutes);
+// Routes
+app.use('/api/auth', authRoutes)
+app.use('/api/products', productRoutes)
+app.use('/api/orders', orderRoutes)
+app.use('/api/categories', categoryRoutes)
 
 // Health check
-app.get('/health', (req, res) => {
-  res.json({ message: 'Server is running' });
-});
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'Server is running' })
+})
 
-// Error handling middleware
-app.use(errorHandler);
+// Error handling
+app.use((err, req, res, next) => {
+  console.error(err.stack)
+  res.status(500).json({ error: err.message })
+})
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+  console.log(`🚀 Server running on http://localhost:${PORT}`)
+})

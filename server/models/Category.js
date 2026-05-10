@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose'
 
 const categorySchema = new mongoose.Schema({
   name: {
@@ -6,12 +6,12 @@ const categorySchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  emoji: String,
   description: String,
-  image: String,
   createdAt: {
     type: Date,
     default: Date.now,
   },
-});
+})
 
-module.exports = mongoose.model('Category', categorySchema);
+export default mongoose.model('Category', categorySchema)

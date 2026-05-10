@@ -1,51 +1,47 @@
-import React, { createContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react'
 
-export const AuthContext = createContext();
+const AuthContext = createContext()
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-  const login = useCallback(async (email, password) => {
-    setLoading(true);
-    try {
-      // Call authentication API
-      console.log('Login with:', email);
-      // setUser(userData);
-    } catch (error) {
-      console.error('Login failed:', error);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    const userData = localStorage.getItem('user')
+    if (token && userData) {
+      try {
+        setUser(JSON.parse(userData))
+      } catch (e) {
+        console.error('Failed to parse user data')
+      }
     }
-  }, []);
+    setLoading(false)
+  }, [])
 
-  const logout = useCallback(() => {
-    setUser(null);
-  }, []);
+  const login = (userData) => {
+    setUser(userData)
+    localStorage.setItem('token', userData.token || userData._id)
+    localStorage.setItem('user', JSON.stringify(userData))
+  }
 
-  const signup = useCallback(async (userData) => {
-    setLoading(true);
-    try {
-      // Call signup API
-      console.log('Signup:', userData);
-    } catch (error) {
-      console.error('Signup failed:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const logout = () => {
+    setUser(null)
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+  }
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        login,
-        logout,
-        signup,
-      }}
-    >
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
-  );
+  )
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider')
+  }
+  return context
 }
